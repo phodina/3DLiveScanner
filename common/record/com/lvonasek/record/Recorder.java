@@ -419,7 +419,19 @@ public class Recorder {
                     else
                     {
                         audioBufferInfo.presentationTimeUs = audioExtractor.getSampleTime();
-                        audioBufferInfo.flags = audioExtractor.getSampleFlags();
+                        // Map MediaExtractor sample flags to valid MediaCodec buffer flags
+                        int audioSampleFlags = audioExtractor.getSampleFlags();
+                        int audioBufferFlags = 0;
+                        if ((audioSampleFlags & MediaExtractor.SAMPLE_FLAG_SYNC) != 0) {
+                            audioBufferFlags |= MediaCodec.BUFFER_FLAG_SYNC_FRAME;
+                        }
+                        if ((audioSampleFlags & MediaExtractor.SAMPLE_FLAG_ENCRYPTED) != 0) {
+                            // No direct mapping, ignore or handle as needed
+                        }
+                        if ((audioSampleFlags & MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME) != 0) {
+                            audioBufferFlags |= MediaCodec.BUFFER_FLAG_PARTIAL_FRAME;
+                        }
+                        audioBufferInfo.flags = audioBufferFlags;
                         muxer.writeSampleData(audioTrack, audioBuf, audioBufferInfo);
                         audioExtractor.advance();
                     }
