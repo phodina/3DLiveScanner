@@ -80,12 +80,26 @@ jobs:
       with:
         name: night_vision-apk
         path: night_vision-apk
+    - name: Find APK files
+      id: find_apks
+      run: |
+        echo "Finding APK files..."
+        find scanner-apk -name "*.apk" -type f
+        find night_vision-apk -name "*.apk" -type f
+    - name: Rename APKs
+      run: |
+        mkdir -p release-files
+        cp scanner-apk/release/app-release.apk release-files/scanner-release.apk || \
+        cp scanner-apk/**/release/app-release.apk release-files/scanner-release.apk || \
+        find scanner-apk -name "*-release.apk" -type f -exec cp {} release-files/scanner-release.apk \;
+        cp night_vision-apk/release/app-release.apk release-files/night_vision-release.apk || \
+        cp night_vision-apk/**/release/app-release.apk release-files/night_vision-release.apk || \
+        find night_vision-apk -name "*-release.apk" -type f -exec cp {} release-files/night_vision-release.apk \;
+        ls -la release-files/
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          scanner-apk/**/*.apk
-          night_vision-apk/**/*.apk
+        files: release-files/*.apk
         draft: false
         prerelease: false
         generate_release_notes: true
