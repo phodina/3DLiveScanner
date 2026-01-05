@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace 'com.lvonasek.tofviewer'
     compileSdkVersion 33
     defaultConfig {
         minSdkVersion 29
