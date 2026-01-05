@@ -7,14 +7,14 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
+import androidx.appcompat.widget.AppCompatImageView;
 
 import com.lvonasek.arcore3dscanner.R;
 
 
 /** This view contains the hand motion instructions with animation. */
 
-public class HandMotionView extends ImageView {
+public class HandMotionView extends AppCompatImageView {
 
   private static final long ANIMATION_SPEED_MS = 2500;
 
