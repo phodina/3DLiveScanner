@@ -39,12 +39,14 @@ public class TofViewerActivity extends GvrActivity implements GLESSurfaceView.Re
   private static final String KEY_EYE_ZOOM = "KEY_EYE_ZOOM";
   private static final String KEY_SCHEME = "KEY_SCHEME";
 
-  private final String[] permissions = {
-          Manifest.permission.CAMERA,
-          Manifest.permission.RECORD_AUDIO,
-          Manifest.permission.READ_EXTERNAL_STORAGE,
-          Manifest.permission.WRITE_EXTERNAL_STORAGE
-  };
+    private final String[] permissions = {
+      Manifest.permission.CAMERA,
+      Manifest.permission.RECORD_AUDIO,
+      Manifest.permission.READ_EXTERNAL_STORAGE,
+      Manifest.permission.WRITE_EXTERNAL_STORAGE,
+      Manifest.permission.ACCESS_FINE_LOCATION,
+      Manifest.permission.ACCESS_COARSE_LOCATION
+    };
 
   private static final int REQUEST_PERMISSIONS = 200;
 
@@ -75,8 +77,27 @@ public class TofViewerActivity extends GvrActivity implements GLESSurfaceView.Re
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    // Request runtime permissions if needed
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+      boolean needRequest = false;
+      for (String perm : permissions) {
+        if (checkSelfPermission(perm) != PackageManager.PERMISSION_GRANTED) {
+          needRequest = true;
+          break;
+        }
+      }
+      if (needRequest) {
+        requestPermissions(permissions, REQUEST_PERMISSIONS);
+      }
+    }
+
     //workaround for orientation bug
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    // You can handle permission results here if needed
+  }
 
     mMoreButton = findViewById(R.id.more_button);
     mThumbnailButton = findViewById(R.id.thumbnail_button);
