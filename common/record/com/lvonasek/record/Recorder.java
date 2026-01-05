@@ -385,7 +385,19 @@ public class Recorder {
                 else
                 {
                     videoBufferInfo.presentationTimeUs = videoExtractor.getSampleTime();
-                    videoBufferInfo.flags = videoExtractor.getSampleFlags();
+                    // Map MediaExtractor sample flags to valid MediaCodec buffer flags
+                    int sampleFlags = videoExtractor.getSampleFlags();
+                    int bufferFlags = 0;
+                    if ((sampleFlags & MediaExtractor.SAMPLE_FLAG_SYNC) != 0) {
+                        bufferFlags |= MediaCodec.BUFFER_FLAG_SYNC_FRAME;
+                    }
+                    if ((sampleFlags & MediaExtractor.SAMPLE_FLAG_ENCRYPTED) != 0) {
+                        // No direct mapping, ignore or handle as needed
+                    }
+                    if ((sampleFlags & MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME) != 0) {
+                        bufferFlags |= MediaCodec.BUFFER_FLAG_PARTIAL_FRAME;
+                    }
+                    videoBufferInfo.flags = bufferFlags;
                     muxer.writeSampleData(videoTrack, videoBuf, videoBufferInfo);
                     videoExtractor.advance();
                 }
