@@ -93,11 +93,6 @@ public class TofViewerActivity extends GvrActivity implements GLESSurfaceView.Re
 
     //workaround for orientation bug
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-  @Override
-  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    // You can handle permission results here if needed
-  }
 
     mMoreButton = findViewById(R.id.more_button);
     mThumbnailButton = findViewById(R.id.thumbnail_button);
@@ -282,6 +277,12 @@ public class TofViewerActivity extends GvrActivity implements GLESSurfaceView.Re
       e.putFloat(KEY_EYE_ZOOM, eyeZoom);
       e.apply();
     });
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    // You can handle permission results here if needed
   }
 
   private void cancelRecordingNight() {
