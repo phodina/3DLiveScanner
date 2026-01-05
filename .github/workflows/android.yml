@@ -3,6 +3,8 @@ name: Android CI
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -30,3 +32,42 @@ jobs:
       run: cd scanner && ./gradlew build
     - name: Build night_vision
       run: cd night_vision && ./gradlew build
+    - name: Upload scanner APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: scanner-apk
+        path: scanner/app/build/outputs/apk/**/*.apk
+    - name: Upload night_vision APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: night_vision-apk
+        path: night_vision/app/build/outputs/apk/**/*.apk
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+    - name: Download scanner APK
+      uses: actions/download-artifact@v4
+      with:
+        name: scanner-apk
+        path: scanner-apk
+    - name: Download night_vision APK
+      uses: actions/download-artifact@v4
+      with:
+        name: night_vision-apk
+        path: night_vision-apk
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          scanner-apk/**/*.apk
+          night_vision-apk/**/*.apk
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
