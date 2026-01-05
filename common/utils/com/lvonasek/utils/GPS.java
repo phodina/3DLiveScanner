@@ -19,25 +19,28 @@ public class GPS implements LocationListener {
     count = stopAfter;
     locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-    try {
-      locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 250, 20, this);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    try {
-      locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 250, 50, this);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    Location gps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-    if (gps != null) {
-      lastLocation = gps;
-    }
-    Location net = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-    if (net != null) {
-      lastLocation = net;
+    // Check location permissions before requesting updates
+    boolean hasFine = context.checkSelfPermission("android.permission.ACCESS_FINE_LOCATION") == android.content.pm.PackageManager.PERMISSION_GRANTED;
+    boolean hasCoarse = context.checkSelfPermission("android.permission.ACCESS_COARSE_LOCATION") == android.content.pm.PackageManager.PERMISSION_GRANTED;
+    if (hasFine || hasCoarse) {
+      try {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 250, 20, this);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      try {
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 250, 50, this);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      Location gps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+      if (gps != null) {
+        lastLocation = gps;
+      }
+      Location net = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+      if (net != null) {
+        lastLocation = net;
+      }
     }
   }
 

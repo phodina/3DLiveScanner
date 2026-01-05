@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public class FileManager extends AbstractActivity implements View.OnClickListener {
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
   private FileAdapter mAdapter;
   private GridView mList;
   private Button mAdd;
@@ -123,6 +124,14 @@ public class FileManager extends AbstractActivity implements View.OnClickListene
   protected void onResume()
   {
     super.onResume();
+    // Request location permissions if not granted
+    if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+        checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+      askForPermissions(new String[] {
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
+      });
+    }
     mAdd.setVisibility(View.VISIBLE);
     mCancel.setVisibility(View.GONE);
     mProgress.setVisibility(View.GONE);
