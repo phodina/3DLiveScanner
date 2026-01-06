@@ -68,6 +68,9 @@ class DepthmapRenderer implements ImageReader.OnImageAvailableListener {
 
   private ImageReader mImageReader;
   private CameraDevice mCameraDevice;
+  private CameraCaptureSession mCaptureSession;
+  private HandlerThread mBackgroundThread;
+  private Handler mBackgroundHandler;
   private float[] mAngles;
 
   /**
@@ -159,12 +162,17 @@ class DepthmapRenderer implements ImageReader.OnImageAvailableListener {
       return;
     }
 
+    // Start background thread for camera operations
+    mBackgroundThread = new HandlerThread("CameraBackground");
+    mBackgroundThread.start();
+    mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+
     mImageReader = ImageReader.newInstance(depthWidth, depthHeight,
             ImageFormat.DEPTH16, 5);
-    mImageReader.setOnImageAvailableListener(this, null);
+    mImageReader.setOnImageAvailableListener(this, mBackgroundHandler);
     CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
     try {
-      manager.openCamera(depthCameraId, callBack, null);
+      manager.openCamera(depthCameraId, callBack, mBackgroundHandler);
     } catch (CameraAccessException e) {
       e.printStackTrace();
     } catch (Exception e) {
@@ -176,14 +184,27 @@ class DepthmapRenderer implements ImageReader.OnImageAvailableListener {
    * Closes the current {@link CameraDevice}.
    */
   public void closeCamera() {
+    if (null != mCaptureSession) {
+      mCaptureSession.close();
+      mCaptureSession = null;
+    }
     if (null != mImageReader) {
       mImageReader.close();
       mImageReader = null;
     }
-    if (null != mCameraDevice)
-    {
+    if (null != mCameraDevice) {
       mCameraDevice.close();
       mCameraDevice = null;
+    }
+    if (null != mBackgroundThread) {
+      mBackgroundThread.quitSafely();
+      try {
+        mBackgroundThread.join();
+        mBackgroundThread = null;
+        mBackgroundHandler = null;
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -298,14 +319,11 @@ class DepthmapRenderer implements ImageReader.OnImageAvailableListener {
 
           @Override
           public void onConfigured(CameraCaptureSession cameraCaptureSession) {
+            mCaptureSession = cameraCaptureSession;
             CameraCaptureSession.CaptureCallback captureCallback = new CameraCaptureSession.CaptureCallback() {};
 
             try {
-              HandlerThread handlerThread = new HandlerThread("DepthBackgroundThread");
-              handlerThread.start();
-              Handler handler = new Handler(handlerThread.getLooper());
-              cameraCaptureSession.setRepeatingRequest(requestBuilder.build(),captureCallback,handler);
-
+              cameraCaptureSession.setRepeatingRequest(requestBuilder.build(), captureCallback, mBackgroundHandler);
             } catch (CameraAccessException e) {
               e.printStackTrace();
             }
@@ -314,7 +332,7 @@ class DepthmapRenderer implements ImageReader.OnImageAvailableListener {
           public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
 
           }
-        },null);
+        }, mBackgroundHandler);
       } catch (CameraAccessException e) {
         e.printStackTrace();
       }
