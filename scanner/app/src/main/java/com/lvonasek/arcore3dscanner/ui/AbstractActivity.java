@@ -10,9 +10,11 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -270,6 +272,22 @@ public abstract class AbstractActivity extends Activity {
   }
 
   protected void askForPermissions(String[] permissions) {
+    // Check if we need MANAGE_EXTERNAL_STORAGE for Android 11+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      if (!Environment.isExternalStorageManager()) {
+        try {
+          Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+          intent.setData(Uri.parse("package:" + getPackageName()));
+          startActivity(intent);
+          return;
+        } catch (Exception e) {
+          Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+          startActivity(intent);
+          return;
+        }
+      }
+    }
+    
     boolean ok = true;
     for (String s : permissions)
       if (checkSelfPermission(s) != PackageManager.PERMISSION_GRANTED)
