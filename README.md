@@ -32,3 +32,13 @@ To launch:
 adb shell am start -n com.lvonasek.tofviewer/.TofViewerActivity
 adb shell am start -n com.lvonasek.arcore3dscanner/.ui.Initializator
 ```
+
+## Notes
+
+On Samsung the ToF Camera is not accesible using the Camera2 API due to Samsung blocking the sensor.
+
+```
+samsung.android.uniplugin.isProbeTOFSensor = 0
+```
+
+Therefore the only way to talk to the camera is through the ARCore using the scanner.
