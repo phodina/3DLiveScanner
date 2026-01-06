@@ -25,11 +25,24 @@ namespace oc {
             if (faceMode)
                 ArConfig_setAugmentedFaceMode(ar_session_, ar_config, AR_AUGMENTED_FACE_MODE_MESH3D);
             else {
-                useDepthRaw = true;
+                // FIX: Check depth mode support before setting to avoid Samsung ToF issues
                 if (depthCamera) {
-                    ArConfig_setDepthMode(ar_session_, ar_config, AR_DEPTH_MODE_RAW_DEPTH_ONLY);
+                    // Try RAW_DEPTH_ONLY first for true ToF devices
+                    int rawSupported = 0;
+                    ArSession_isDepthModeSupported(ar_session_, AR_DEPTH_MODE_RAW_DEPTH_ONLY, &rawSupported);
+                    
+                    if (rawSupported) {
+                        ArConfig_setDepthMode(ar_session_, ar_config, AR_DEPTH_MODE_RAW_DEPTH_ONLY);
+                        useDepthRaw = true;
+                    } else {
+                        // Fallback to AUTOMATIC for Samsung and other OEMs that don't expose raw ToF
+                        ArConfig_setDepthMode(ar_session_, ar_config, AR_DEPTH_MODE_AUTOMATIC);
+                        useDepthRaw = false;
+                    }
                 } else {
-                    ArConfig_setDepthMode(ar_session_, ar_config, AR_DEPTH_MODE_ALWAYS_ENABLED);
+                    // For non-ToF devices, use AUTOMATIC depth mode
+                    ArConfig_setDepthMode(ar_session_, ar_config, AR_DEPTH_MODE_AUTOMATIC);
+                    useDepthRaw = false;
                 }
             }
             ArConfig_setUpdateMode(ar_session_, ar_config, AR_UPDATE_MODE_BLOCKING);
@@ -37,8 +50,9 @@ namespace oc {
             ArConfig_destroy(ar_config);
             ArFrame_create(ar_session_, &ar_frame_);
 
+            // Check for any depth mode support (AUTOMATIC is most widely supported)
             int out_is_supported = 0;
-            ArSession_isDepthModeSupported(ar_session_, AR_DEPTH_MODE_ALWAYS_ENABLED, &out_is_supported);
+            ArSession_isDepthModeSupported(ar_session_, AR_DEPTH_MODE_AUTOMATIC, &out_is_supported);
             useDepth = (out_is_supported != 0) || depthCamera;
         } else
 #endif
@@ -95,6 +109,7 @@ namespace oc {
         ar_session_ = static_cast<ArSession *>(session);
         ar_frame_ = static_cast<ArFrame *>(frame);
 
+        // Verify AUTOMATIC depth mode support
         int out_is_supported = 0;
         ArSession_isDepthModeSupported(ar_session_, AR_DEPTH_MODE_AUTOMATIC, &out_is_supported);
         useDepth = (out_is_supported != 0) || useDepth;
