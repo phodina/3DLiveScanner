@@ -24,3 +24,11 @@ keytool -genkey -v -keystore release-keystore.jks -keyalg RSA -keysize 2048 -val
 
 base64 release-keystore.jks > release-keystore.jks.b64
 ```
+
+## ADB
+
+To launch:
+```
+adb shell am start -n com.lvonasek.tofviewer/.TofViewerActivity
+adb shell am start -n com.lvonasek.arcore3dscanner/.ui.Initializator
+```
